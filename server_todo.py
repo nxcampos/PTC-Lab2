@@ -1,5 +1,6 @@
 import json
 import socket
+#MiguelCoelho
 
 # This class represents a single todo item
 class TodoItem:
