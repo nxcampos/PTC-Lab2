@@ -2,14 +2,24 @@ import json
 import socket
 from cryptography.fernet import Fernet
 
-# This class represents a single todo item
+# O problema no código apresentado ocorre porque o estado da tarefa (completo ou incompleto) não está a ser carregado corretamente a partir do ficheiro todo_list.fernet.
+# A solução para este problema passa por alterar o método de leitura do ficheiro todo_list.fernet para incluir a informação sobre o estado da tarefa.
+# Assim, a função TodoList.init() deve ser modificada para aceitar uma linha do ficheiro todo_list.fernet como argumento e inicializar o objeto TodoItem com o estado da tarefa correto. 
+# A função TodoList.save_cipher() também deve ser modificada para incluir o estado da tarefa na linha do ficheiro todo_list.fernet.
+
+
 class TodoItem:
-    def __init__(self, title, description):
+    def __init__(self, title, description, completed=False):
         self.title = title
         self.description = description
-        self.completed = False
+        self.completed = completed
 
-# This class represents a list of TodoItems
+    def __str__(self):
+        status = "[ ]"
+        if self.completed:
+            status = "[x]"
+        return f"{status} {self.title}: {self.description}"
+
 class TodoList:
     def __init__(self):
         self.items = []
@@ -26,7 +36,7 @@ class TodoList:
 
     def count_items(self):
         return len(self.items)
-    
+
     def save_cipher(self, key):
         cipher = Fernet(key)
         with open('todo_list.fernet', 'w') as file:
@@ -38,10 +48,7 @@ class TodoList:
     def get_list_of_items(self):
         result = ""
         for i, item in enumerate(self.items):
-            status = "[ ]"
-            if item.completed:
-                status = "[x]"
-            result += f"{i}. {status} {item.title}: {item.description}\n"
+            result += f"{i}. {str(item)}\n"
         return result
 
 host = 'localhost'
@@ -50,21 +57,18 @@ port = 8888
 # load key
 with open('key.fernet', 'rb') as key_file:
     key = key_file.read()
-    #key = key.strip()
     print("Loaded key: ", key)
 
-# check if todo_list.fernet exists
+# verifica se todo_list.fernet existe
 try:
     with open('todo_list.fernet', 'r') as file:
         todo_list = TodoList()
         for line in file:
             cipher = Fernet(key)
             c_item = line.strip()
-            print("going to decrypt: ", c_item)
             plain_item = cipher.decrypt(c_item.encode()).decode()
-            print("decrypted: ", plain_item)
             title, description, completed = plain_item.split(",")
-            todo_list.add_item(title, description)
+            todo_list.items.append(TodoItem(title, description, completed == "True"))
 except FileNotFoundError:
     todo_list = TodoList()
 
