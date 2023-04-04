@@ -1,5 +1,5 @@
 import socket
-
+#https://github.com/nxcampos/PTC-Lab2 -> Miguel Coelho
 host = 'localhost'
 port = 9001
 
